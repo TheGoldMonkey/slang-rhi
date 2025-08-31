@@ -103,7 +103,7 @@ cmake_dependent_option(SLANG_RHI_ENABLE_METAL "Enable Metal backend" ON "SLANG_R
 cmake_dependent_option(SLANG_RHI_ENABLE_CUDA "Enable CUDA backend" ON "SLANG_RHI_HAS_CUDA" OFF)
 cmake_dependent_option(SLANG_RHI_ENABLE_OPTIX "Enable OptiX support" ON "SLANG_RHI_HAS_CUDA" OFF)
 cmake_dependent_option(SLANG_RHI_ENABLE_WGPU "Enable WebGPU backend" ON "SLANG_RHI_HAS_WGPU" OFF)
-cmake_dependent_option(SLANG_RHI_FETCH_DAWN "Fetch dawn" ON "SLANG_RHI_FETCH_DAWN" ON)
+cmake_dependent_option(SLANG_RHI_FETCH_DAWN "Fetch dawn" ON "SLANG_RHI_ENABLE_WGPU" OFF)
 
 # Fetch slang options
 option(SLANG_RHI_FETCH_SLANG "Fetch slang" ON)
