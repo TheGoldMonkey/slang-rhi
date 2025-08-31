@@ -6,3 +6,5 @@ external/optix
 .vs/
 
 *.nsys-rep
+logs
+build

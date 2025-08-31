@@ -1,9 +1,11 @@
 #include "wgpu-surface.h"
+#include "webgpu/webgpu.h"
 #include "wgpu-device.h"
 #include "wgpu-texture.h"
 #include "wgpu-utils.h"
 
 #include "../core/reverse-map.h"
+#include <cstddef>
 #if SLANG_APPLE_FAMILY
 #include "../cocoa-util.h"
 #endif
@@ -40,6 +42,8 @@ Result SurfaceImpl::init(DeviceImpl* device, WindowHandle windowHandle)
     WGPUSurfaceSourceXlibWindow descXlib = {};
 #elif SLANG_APPLE_FAMILY
     WGPUSurfaceSourceMetalLayer descMetal = {};
+#elif __EMSCRIPTEN__
+    WGPUEmscriptenSurfaceSourceCanvasHTMLSelector descCanvas = {};
 #endif
 
     switch (windowHandle.type)
@@ -65,6 +69,12 @@ Result SurfaceImpl::init(DeviceImpl* device, WindowHandle windowHandle)
         descXlib.window = (uint64_t)windowHandle.handleValues[1];
         desc.nextInChain = (WGPUChainedStruct*)&descXlib;
         break;
+#elif __EMSCRIPTEN__
+    case WindowHandleType::HTML5Canvas:
+        descCanvas.chain.sType = WGPUSType_EmscriptenSurfaceSourceCanvasHTMLSelector;
+        descCanvas.selector = translateString((const char *)windowHandle.handleValues[0]);
+        desc.nextInChain = (WGPUChainedStruct*)&descCanvas;
+        break;
 #endif
     default:
         return SLANG_E_INVALID_HANDLE;
@@ -73,7 +83,7 @@ Result SurfaceImpl::init(DeviceImpl* device, WindowHandle windowHandle)
     m_surface = m_device->m_ctx.api.wgpuInstanceCreateSurface(m_device->m_ctx.instance, &desc);
 
     // Query capabilities
-    WGPUSurfaceCapabilities capabilities;
+    WGPUSurfaceCapabilities capabilities = {};
     m_device->m_ctx.api.wgpuSurfaceGetCapabilities(m_surface, m_device->m_ctx.adapter, &capabilities);
 
     // Get supported formats
@@ -207,7 +217,8 @@ Result SurfaceImpl::acquireNextImage(ITexture** outTexture)
 
     WGPUSurfaceTexture surfaceTexture;
     m_device->m_ctx.api.wgpuSurfaceGetCurrentTexture(m_surface, &surfaceTexture);
-    if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_Success)
+    if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
+         surfaceTexture.status !=WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
     {
         return SLANG_FAIL;
     }

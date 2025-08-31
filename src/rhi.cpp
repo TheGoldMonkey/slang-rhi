@@ -5,6 +5,7 @@
 
 #include "core/common.h"
 #include "core/task-pool.h"
+#include "wgpu/wgpu-device.h"
 
 #include <cstring>
 #include <vector>
@@ -258,6 +259,11 @@ Result RHI::getAdapters(DeviceType type, ISlangBlob** outAdaptersBlob)
         SLANG_RETURN_ON_FAIL(getCUDAAdapters(adapters));
         break;
 #endif
+#if SLANG_RHI_ENABLE_WGPU
+    case DeviceType::WGPU:
+        SLANG_RETURN_ON_FAIL(getWGPUAdapters(adapters));
+        break;        
+#endif
     default:
         return SLANG_E_INVALID_ARG;
     }
@@ -275,8 +281,8 @@ inline Result _createDevice(const DeviceDesc* desc, IDevice** outDevice)
     {
     case DeviceType::Default:
     {
-        DeviceDesc newDesc = *desc;
 #if SLANG_WINDOWS_FAMILY
+        DeviceDesc newDesc = *desc;
         newDesc.deviceType = DeviceType::D3D12;
         if (_createDevice(&newDesc, outDevice) == SLANG_OK)
             return SLANG_OK;
@@ -284,10 +290,12 @@ inline Result _createDevice(const DeviceDesc* desc, IDevice** outDevice)
         if (_createDevice(&newDesc, outDevice) == SLANG_OK)
             return SLANG_OK;
 #elif SLANG_LINUX_FAMILY
+        DeviceDesc newDesc = *desc;
         newDesc.deviceType = DeviceType::Vulkan;
         if (_createDevice(&newDesc, outDevice) == SLANG_OK)
             return SLANG_OK;
 #elif SLANG_APPLE_FAMILY
+        DeviceDesc newDesc = *desc;
         newDesc.deviceType = DeviceType::Metal;
         if (_createDevice(&newDesc, outDevice) == SLANG_OK)
             return SLANG_OK;

@@ -58,7 +58,7 @@ using Slang::Guid;
 typedef SlangResult Result;
 
 // Had to move here, because Options needs types defined here
-typedef uint64_t DeviceAddress;
+typedef uintptr_t DeviceAddress;
 typedef size_t Size;
 typedef size_t Offset;
 
@@ -1948,6 +1948,7 @@ enum class WindowHandleType
     HWND,
     NSWindow,
     XlibWindow,
+    HTML5Canvas,
 };
 
 struct WindowHandle
@@ -1975,6 +1976,13 @@ struct WindowHandle
         handle.type = WindowHandleType::XlibWindow;
         handle.handleValues[0] = (uint64_t)(xdisplay);
         handle.handleValues[1] = xwindow;
+        return handle;
+    }
+    static WindowHandle fromHTML5Canvas(const char * canvas_id)
+    {
+        WindowHandle handle = {};
+        handle.type = WindowHandleType::HTML5Canvas;
+        handle.handleValues[0] = (uint64_t)(canvas_id);
         return handle;
     }
 };

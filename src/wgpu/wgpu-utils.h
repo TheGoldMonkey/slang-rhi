@@ -28,5 +28,8 @@ WGPUBlendOperation translateBlendOperation(BlendOp op);
 
 WGPULoadOp translateLoadOp(LoadOp op);
 WGPUStoreOp translateStoreOp(StoreOp op);
-
+inline WGPUStringView translateString(const char* str)
+{
+    return str ? WGPUStringView{str, ::strlen(str)} : WGPUStringView{nullptr, 0};
+}
 } // namespace rhi::wgpu

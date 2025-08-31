@@ -23,7 +23,7 @@ Result ShaderProgramImpl::createShaderModule(slang::EntryPointReflection* entryP
 {
     DeviceImpl* device = getDevice<DeviceImpl>();
 
-    auto existingError = device->getAndClearLastError();
+    auto existingError = device->getAndClearLastUncapturedError();
     if (existingError != WGPUErrorType_NoError)
         device->printWarning("Web GPU device had reported error before shader compilation.");
 
@@ -32,7 +32,8 @@ Result ShaderProgramImpl::createShaderModule(slang::EntryPointReflection* entryP
     module.entryPointName = entryPointInfo->getNameOverride();
     module.code = std::string((char*)kernelCode->getBufferPointer(), kernelCode->getBufferSize());
 
-    WGPUShaderModuleWGSLDescriptor wgslDesc = {};
+    WGPUShaderSourceWGSL wgslDesc = {};
+
     wgslDesc.chain.sType = WGPUSType_ShaderSourceWGSL;
     wgslDesc.code.data = module.code.c_str();
     wgslDesc.code.length = module.code.size();
@@ -45,7 +46,7 @@ Result ShaderProgramImpl::createShaderModule(slang::EntryPointReflection* entryP
         return SLANG_FAIL;
     }
 
-    auto lastError = device->getAndClearLastError();
+    auto lastError = device->getAndClearLastUncapturedError();
     if (lastError != WGPUErrorType_NoError)
     {
         return SLANG_FAIL;
