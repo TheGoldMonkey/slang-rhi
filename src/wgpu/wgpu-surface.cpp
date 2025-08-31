@@ -102,17 +102,22 @@ Result SurfaceImpl::init(DeviceImpl* device, WindowHandle windowHandle)
     }
 
     // Get supported usage
-    TextureUsage usage = TextureUsage::None;
-    if (capabilities.usages & WGPUTextureUsage_CopySrc)
-        usage |= TextureUsage::CopySource;
-    if (capabilities.usages & WGPUTextureUsage_CopyDst)
-        usage |= TextureUsage::CopyDestination;
-    if (capabilities.usages & WGPUTextureUsage_TextureBinding)
-        usage |= TextureUsage::ShaderResource;
-    if (capabilities.usages & WGPUTextureUsage_StorageBinding)
-        usage |= TextureUsage::UnorderedAccess;
-    if (capabilities.usages & WGPUTextureUsage_RenderAttachment)
-        usage |= TextureUsage::RenderTarget;
+    TextureUsage usage = TextureUsage::None | TextureUsage::Present
+    |TextureUsage::CopySource
+    |TextureUsage::CopyDestination
+    |TextureUsage::ShaderResource
+    |TextureUsage::UnorderedAccess
+    |TextureUsage::RenderTarget;
+    // if (capabilities.usages & WGPUTextureUsage_CopySrc)
+    //     usage |= TextureUsage::CopySource;
+    // if (capabilities.usages & WGPUTextureUsage_CopyDst)
+    //     usage |= TextureUsage::CopyDestination;
+    // if (capabilities.usages & WGPUTextureUsage_TextureBinding)
+    //     usage |= TextureUsage::ShaderResource;
+    // if (capabilities.usages & WGPUTextureUsage_StorageBinding)
+    //     usage |= TextureUsage::UnorderedAccess;
+    // if (capabilities.usages & WGPUTextureUsage_RenderAttachment)
+    //     usage |= TextureUsage::RenderTarget;
 
     m_info.preferredFormat = preferredFormat;
     m_info.formats = m_supportedFormats.data();
@@ -246,7 +251,9 @@ Result SurfaceImpl::present()
     {
         return SLANG_FAIL;
     }
+#if !__EMSCRIPTEN__
     m_device->m_ctx.api.wgpuSurfacePresent(m_surface);
+#endif
     return SLANG_OK;
 }
 

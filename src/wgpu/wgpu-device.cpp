@@ -45,7 +45,13 @@ DeviceImpl::~DeviceImpl()
 
 Result DeviceImpl::getNativeDeviceHandles(DeviceNativeHandles* outHandles)
 {
-    return SLANG_E_NOT_IMPLEMENTED;
+    if (outHandles) {
+        outHandles->handles[0].type = NativeHandleType::WGPUDevice;
+        outHandles->handles[0].value = (uint64_t)m_ctx.device;
+        return SLANG_OK;
+    }
+    
+    return SLANG_E_INVALID_ARG;
 }
 
 void DeviceImpl::reportError(const char* func, WGPUStringView message)
@@ -82,7 +88,7 @@ Result DeviceImpl::initialize(const DeviceDesc& desc)
     API& api = m_ctx.api;
 
     WGPUInstanceDescriptor instanceDesc = {};
-        auto features = std::array{WGPUInstanceFeatureName_TimedWaitAny};
+    auto features = std::array{WGPUInstanceFeatureName_TimedWaitAny};
     
     instanceDesc.requiredFeatures = features.data();
     instanceDesc.requiredFeatureCount = features.size();
