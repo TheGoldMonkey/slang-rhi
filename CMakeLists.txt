@@ -610,6 +610,7 @@ if(SLANG_RHI_ENABLE_VULKAN)
         src/vulkan/vk-device-queue.cpp
         src/vulkan/vk-device.cpp
         src/vulkan/vk-fence.cpp
+        src/vulkan/vk-heap.cpp
         src/vulkan/vk-pipeline.cpp
         src/vulkan/vk-query.cpp
         src/vulkan/vk-sampler.cpp
@@ -731,6 +732,7 @@ if(SLANG_RHI_BUILD_TESTS)
         tests/test-buffer-barrier.cpp
         tests/test-buffer-from-handle.cpp
         tests/test-buffer-shared.cpp
+        tests/test-command-encoder.cpp
         tests/test-compilation-report.cpp
         tests/test-cmd-clear-buffer.cpp
         tests/test-cmd-clear-texture.cpp

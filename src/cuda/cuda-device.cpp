@@ -416,6 +416,7 @@ Result DeviceImpl::initialize(const DeviceDesc& desc)
     }
 
     m_queue = new CommandQueueImpl(this, QueueType::Graphics);
+    SLANG_RETURN_ON_FAIL(m_queue->init());
     m_queue->setInternalReferenceCount(1);
 
     // Create 2 heaps. On CUDA both Upload and ReadBack just use host memory,
@@ -434,6 +435,10 @@ Result DeviceImpl::initialize(const DeviceDesc& desc)
     SLANG_RETURN_ON_FAIL(createHeap(heapDesc, heapPtr.writeRef()));
     m_deviceMemHeap = checked_cast<HeapImpl*>(heapPtr.get());
     m_deviceMemHeap->breakStrongReferenceToDevice();
+
+    // Register heaps with the base Device class for reporting
+    m_reportedHeaps.push_back(m_hostMemHeap);
+    m_reportedHeaps.push_back(m_deviceMemHeap);
 
     SLANG_RETURN_ON_FAIL(m_clearEngine.initialize(m_debugCallback));
 

@@ -2601,12 +2601,22 @@ struct HeapAlloc
     operator bool() const { return isValid(); }
 };
 
+enum class HeapUsage
+{
+    None = 0,
+    Shared = (1 << 0),
+};
+SLANG_RHI_ENUM_CLASS_OPERATORS(HeapUsage);
+
 struct HeapDesc
 {
     StructType structType = StructType::HeapDesc;
 
     /// Type of memory heap should reside in.
     MemoryType memoryType = MemoryType::DeviceLocal;
+
+    /// Usage flags for the heap.
+    HeapUsage usage = HeapUsage::None;
 
     /// The label for the heap.
     const char* label = nullptr;
@@ -2618,29 +2628,29 @@ struct HeapAllocDesc
     Size alignment = 0;
 };
 
+struct HeapReport
+{
+    char label[128] = {};
+    uint32_t numPages = 0;
+    uint64_t totalAllocated = 0;
+    uint64_t totalMemUsage = 0;
+    uint64_t numAllocations = 0;
+};
+
 class IHeap : public ISlangUnknown
 {
     SLANG_COM_INTERFACE(0x1c3b8f2a, 0x4d5e, 0x4b6c, {0x9f, 0x7d, 0x3e, 0x1c, 0x8b, 0x6f, 0x2c, 0x5a});
 
 public:
-    struct Report
-    {
-        uint32_t numPages = 0;
-        uint64_t totalAllocated = 0;
-        uint64_t totalMemUsage = 0;
-        uint64_t numAllocations = 0;
-    };
-
-
     virtual SLANG_NO_THROW Result SLANG_MCALL allocate(const HeapAllocDesc& desc, HeapAlloc* outAllocation) = 0;
 
     virtual SLANG_NO_THROW Result SLANG_MCALL free(HeapAlloc allocation) = 0;
 
-    virtual SLANG_NO_THROW Result SLANG_MCALL report(Report* outReport) = 0;
+    virtual SLANG_NO_THROW Result SLANG_MCALL report(HeapReport* outReport) = 0;
 
-    Report report()
+    HeapReport report()
     {
-        Report res;
+        HeapReport res;
         report(&res);
         return res;
     }
@@ -3267,6 +3277,14 @@ public:
         const ConvertCooperativeVectorMatrixDesc* descs,
         uint32_t descCount
     ) = 0;
+
+    /// Report status of internal heaps used by the device.
+    /// If heapReports is null, returns the number of heaps in heapCount.
+    /// If heapReports is provided, fills up to *heapCount heap reports and returns actual count.
+    /// @param heapReports [out] Buffer to write heap reports to (can be null for count query)
+    /// @param heapCount [in/out] On input: size of heapReports buffer (ignored if heapReports is null). On output:
+    /// number of heaps available or written
+    virtual SLANG_NO_THROW Result SLANG_MCALL reportHeaps(HeapReport* heapReports, uint32_t* heapCount) = 0;
 };
 
 class ITaskPool : public ISlangUnknown
