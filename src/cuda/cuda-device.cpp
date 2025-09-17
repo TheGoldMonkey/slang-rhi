@@ -274,6 +274,10 @@ Result DeviceImpl::initialize(const DeviceDesc& desc)
 
         DeviceLimits limits = {};
 
+        size_t totalMem = 0;
+        SLANG_CUDA_RETURN_ON_FAIL_REPORT(cuDeviceTotalMem(&totalMem, m_ctx.device), this);
+        limits.maxBufferSize = totalMem;
+
         limits.maxTextureDimension1D = getAttribute(CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH);
         limits.maxTextureDimension2D = min({
             getAttribute(CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH),
@@ -425,20 +429,20 @@ Result DeviceImpl::initialize(const DeviceDesc& desc)
     HeapDesc heapDesc = {};
 
     heapDesc.memoryType = MemoryType::Upload;
-    heapDesc.label = "Device local heap";
+    heapDesc.label = "Device upload heap";
     SLANG_RETURN_ON_FAIL(createHeap(heapDesc, heapPtr.writeRef()));
     m_hostMemHeap = checked_cast<HeapImpl*>(heapPtr.get());
     m_hostMemHeap->breakStrongReferenceToDevice();
 
     heapDesc.memoryType = MemoryType::DeviceLocal;
-    heapDesc.label = "Device upload heap";
+    heapDesc.label = "Device local heap";
     SLANG_RETURN_ON_FAIL(createHeap(heapDesc, heapPtr.writeRef()));
     m_deviceMemHeap = checked_cast<HeapImpl*>(heapPtr.get());
     m_deviceMemHeap->breakStrongReferenceToDevice();
 
     // Register heaps with the base Device class for reporting
-    m_reportedHeaps.push_back(m_hostMemHeap);
-    m_reportedHeaps.push_back(m_deviceMemHeap);
+    m_globalHeaps.push_back(m_hostMemHeap);
+    m_globalHeaps.push_back(m_deviceMemHeap);
 
     SLANG_RETURN_ON_FAIL(m_clearEngine.initialize(m_debugCallback));
 
