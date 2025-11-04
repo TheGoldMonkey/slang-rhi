@@ -5,7 +5,6 @@
 
 #include "core/common.h"
 #include "core/task-pool.h"
-#include "wgpu/wgpu-device.h"
 
 #include <cstring>
 #include <vector>
@@ -25,6 +24,7 @@ Result SLANG_MCALL getD3D12Adapters(std::vector<AdapterInfo>& outAdapters);
 Result SLANG_MCALL getVKAdapters(std::vector<AdapterInfo>& outAdapters);
 Result SLANG_MCALL getMetalAdapters(std::vector<AdapterInfo>& outAdapters);
 Result SLANG_MCALL getCUDAAdapters(std::vector<AdapterInfo>& outAdapters);
+Result SLANG_MCALL getWGPUAdapters(std::vector<AdapterInfo>& outAdapters);
 
 Result SLANG_MCALL reportD3DLiveObjects();
 void SLANG_MCALL enableD3D12DebugLayerIfAvailable();
