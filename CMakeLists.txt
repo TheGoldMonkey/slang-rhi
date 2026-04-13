@@ -504,7 +504,7 @@ endif()
 
 if(SLANG_RHI_ENABLE_WGPU AND EMSCRIPTEN)
     # For Emscripten, WebGPU headers are provided by emdawnwebgpu port
-    target_compile_options(slang-rhi PRIVATE "--use-port=emdawnwebgpu")
+    # target_compile_options(slang-rhi PRIVATE "--use-port=emdawnwebgpu")
 endif()
 
 # Fetch glfw
@@ -1002,7 +1002,7 @@ if(SLANG_RHI_BUILD_EXAMPLES)
             SUFFIX ".html"
         )
         target_link_options(wasm-test PRIVATE
-            "--use-port=emdawnwebgpu"
+            # "--use-port=emdawnwebgpu"
             "--shell-file" "${CMAKE_CURRENT_SOURCE_DIR}/examples/wasm/index.html"
         )
     endif()
