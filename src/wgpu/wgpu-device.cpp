@@ -136,7 +136,13 @@ DeviceImpl::~DeviceImpl()
 
 Result DeviceImpl::getNativeDeviceHandles(DeviceNativeHandles* outHandles)
 {
-    return SLANG_E_NOT_IMPLEMENTED;
+    if (outHandles) {
+        outHandles->handles[0].type = NativeHandleType::WGPUDevice;
+        outHandles->handles[0].value = (uint64_t)m_ctx.device;
+        return SLANG_OK;
+    }
+    
+    return SLANG_E_INVALID_ARG;
 }
 
 void DeviceImpl::reportError(const char* func, WGPUStringView message)
