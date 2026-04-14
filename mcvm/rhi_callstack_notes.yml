@@ -1,0 +1,64 @@
+engine::init:
+    # ...
+engine::frame:
+    # ...
+    rhi::ICommandEncoder::createCommandEncoder:
+        ConstantBufferPool: # constant buffer pool lifetime is tied to command encoder
+    rhi::ICommandEncoder::uploadBufferData:
+        CommandEncoder::uploadBufferData:
+            StagingHeap::stageHandle:
+                StagingHeap::allocPage:
+                    DeviceImpl::createBuffer: # BufferUsage::CopyDestination | BufferUsage::CopySource
+                        wgpuDeviceCreateBuffer:
+                memcpy:
+                DeviceImpl::unmapBuffer:
+                    wgpuBufferUnmap:
+                        # memcpy on js side
+            CommandList::write: # write copy from staging heap page buffer to device local buffer
+    rhi::ICommandEncoder::beginRenderPass:
+        rhi::IRenderPassEncoder::bindPipeline:
+            # ...
+        rhi::IRenderPassEncoder::setRenderState:
+            # set viewports, scissor rects, blend state, depth stencil state, etc.
+        rhi::IRenderPassEncoder::draw:
+            RenderPassEncoder::draw:
+                RenderPassEncoder::writeRenderState:
+                    CommandEncoder::getBindingData:
+                        BindingDataBuilder::bindAsRoot:
+                            BindingDataBuilder::allocateDescriptorSets: # allocate bind groups
+                            BindingDataBuilder::bindOrdinaryDataBufferIfNeeded: # needed if shader depends on uniform/constant buffer
+                                ConstantBufferPool::allocate:
+                                    ConstantBufferPool::createPage:
+                                        DeviceImpl::createBuffer:
+                                            wgpuDeviceCreateBuffer:
+                                ShaderObject::writeOrdinaryData:
+                                    memcpy: # copy to created staging buffers
+                                # write bindgroups
+                            BindingDataBuilder::bindAsValue:
+                                # write bindgroups
+                            BindingDataBuilder::bindAsEntryPoint:
+                                # perform similar steps to bindAsRoot
+                            BindingDataBuilder::createBindGroups:
+                                wgpuDeviceCreateBindGroup:
+                    CommandList::write: # write render state
+                CommandList::write: # write draw args
+        rhi::IRenderPassEncoder::end:
+    rhi::ICommandEncoder::finish:
+        CommandEncoderImpl::finish:
+            # get cached pipeline
+            ConstantBufferPool::finish:
+                DeviceImpl::unmapBuffer:
+                    wgpuBufferUnmap:
+                        # memcpy on js side
+            CommandRecorder::record:
+                wgpuDeviceCreateCommandEncoder:
+                ConstantBufferPool::upload:
+                    wgpuCommandEncoderCopyBufferToBuffer: # copy from staging buffers to device local buffers
+                # call all wgpu commands in CommandList
+                wgpuRenderPassEncoderEnd:
+                wgpuCommandEncoderFinish:
+                # check for errors
+    rhi::ICommandQueue::submit:
+        # todo: wait for fences
+        wgpuQueueSubmit:
+        # signal fences
