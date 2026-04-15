@@ -48,7 +48,7 @@ std::string subresourceRangeToString(const SubresourceRange& range)
 std::string createBufferLabel(const BufferDesc& desc)
 {
     return string::format(
-        "Unnamed buffer (size=%zu, elementSize=%u, format=%s, memoryType=%s, usage=%s, defaultState=%s)",
+        "Unnamed buffer (size=%llu, elementSize=%u, format=%s, memoryType=%s, usage=%s, defaultState=%s)",
         desc.size,
         desc.elementSize,
         enumToString(desc.format),
