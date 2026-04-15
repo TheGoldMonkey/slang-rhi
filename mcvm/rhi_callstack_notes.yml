@@ -45,7 +45,7 @@ engine::frame:
         rhi::IRenderPassEncoder::end:
     rhi::ICommandEncoder::finish:
         CommandEncoderImpl::finish:
-            # get cached pipeline
+            CommandEncoder::resolvePipelines: # get devirtualized cached pipeline
             ConstantBufferPool::finish:
                 DeviceImpl::unmapBuffer:
                     wgpuBufferUnmap:
@@ -54,7 +54,11 @@ engine::frame:
                 wgpuDeviceCreateCommandEncoder:
                 ConstantBufferPool::upload:
                     wgpuCommandEncoderCopyBufferToBuffer: # copy from staging buffers to device local buffers
-                # call all wgpu commands in CommandList
+                # call all wgpu commands in CommandList:
+                    setRenderState:
+                        wgpuRenderPassEncoderSetPipeline:
+                        wgpuRenderPassEncoderSetBindGroup:
+                        wgpuRenderPassEncoderSetVertexBuffer:
                 wgpuRenderPassEncoderEnd:
                 wgpuCommandEncoderFinish:
                 # check for errors

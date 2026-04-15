@@ -131,7 +131,11 @@ DeviceImpl::~DeviceImpl()
     m_uploadHeap.release();
     m_readbackHeap.release();
 
-    m_queue.setNull();
+    if (m_queue)
+    {
+        m_queue->shutdown();
+        m_queue.setNull();
+    }
 }
 
 Result DeviceImpl::getNativeDeviceHandles(DeviceNativeHandles* outHandles)
