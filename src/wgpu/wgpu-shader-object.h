@@ -4,6 +4,7 @@
 #include "wgpu-shader-object-layout.h"
 #include "wgpu-constant-buffer-pool.h"
 
+#include <unordered_set>
 #include <vector>
 
 namespace rhi::wgpu {
@@ -90,7 +91,7 @@ struct BindingDataImpl : BindingData
 
 struct BindingCache
 {
-    std::vector<BindingDataImpl*> bindingData;
+    std::unordered_set<BindingDataImpl*> bindingData;
 
     void reset(DeviceImpl* device);
 };

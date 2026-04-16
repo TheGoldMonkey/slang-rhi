@@ -98,7 +98,7 @@ Result BindingDataBuilder::bindAsRoot(
     // binding data and reuse that if possible.
     BindingDataImpl* bindingData = m_allocator->allocate<BindingDataImpl>();
     m_bindingData = bindingData;
-    m_bindingCache->bindingData.push_back(bindingData);
+    m_bindingCache->bindingData.insert(bindingData);
 
     m_bindGroupLayouts = specializedLayout->m_bindGroupLayouts;
 
@@ -449,11 +449,11 @@ void BindingDataImpl::release(DeviceImpl* device)
 
 void BindingCache::reset(DeviceImpl* device)
 {
-    for (auto data : bindingData)
-    {
-        data->release(device);
-    }
-    bindingData.clear();
+    // for (auto data : bindingData)
+    // {
+    //     data->release(device);
+    // }
+    // bindingData.clear();
 }
 
 } // namespace rhi::wgpu
