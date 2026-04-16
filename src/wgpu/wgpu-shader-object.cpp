@@ -98,7 +98,7 @@ Result BindingDataBuilder::bindAsRoot(
     // binding data and reuse that if possible.
     BindingDataImpl* bindingData = m_allocator->allocate<BindingDataImpl>();
     m_bindingData = bindingData;
-    m_bindingCache->bindingData.insert(bindingData);
+    m_bindingCache->bindingData.push_back(bindingData);
 
     m_bindGroupLayouts = specializedLayout->m_bindGroupLayouts;
 
@@ -172,15 +172,20 @@ Result BindingDataBuilder::createBindGroups()
 
     for (size_t i = 0; i < m_entries.size(); ++i)
     {
-        WGPUBindGroupDescriptor desc = {};
-        desc.layout = m_bindGroupLayouts[i];
-        desc.entries = m_entries[i].data();
-        desc.entryCount = (uint32_t)m_entries[i].size();
-        WGPUBindGroup bindGroup = m_device->m_ctx.api.wgpuDeviceCreateBindGroup(m_device->m_ctx.device, &desc);
+        // 1. Construct the cache key
+        BindGroupKey key;
+        key.layout = m_bindGroupLayouts[i];
+        key.entries = m_entries[i]; // Copy the array of entries
+
+        // 2. Query the cache (Creates it if it doesn't exist)
+        WGPUBindGroup bindGroup = m_bindingCache->getOrCreateBindGroup(m_device, key);
+        
         if (!bindGroup)
         {
             return SLANG_FAIL;
         }
+        
+        // 3. Assign to the binding data
         m_bindingData->bindGroups[i] = bindGroup;
     }
     return SLANG_OK;
@@ -447,12 +452,36 @@ void BindingDataImpl::release(DeviceImpl* device)
     }
 }
 
+WGPUBindGroup BindingCache::getOrCreateBindGroup(DeviceImpl* device, const BindGroupKey& key) {
+    if (bindGroups.contains(key)) {
+        return bindGroups[key];
+    }
+
+    // Cache miss: Create the new bind group
+    WGPUBindGroupDescriptor desc = {};
+    desc.layout = key.layout;
+    desc.entries = key.entries.data();
+    desc.entryCount = key.entries.size();
+    
+    WGPUBindGroup newBindGroup = device->m_ctx.api.wgpuDeviceCreateBindGroup(device->m_ctx.device, &desc);
+    
+    bindGroups[key] = newBindGroup;
+    return newBindGroup;
+}
+
 void BindingCache::reset(DeviceImpl* device)
 {
-    // for (auto data : bindingData)
+    // // Release the individual bind groups from the cache
+    // for (auto& pair : bindGroups)
     // {
-    //     data->release(device);
+    //     device->m_ctx.api.wgpuBindGroupRelease(pair.second);
     // }
+    // bindGroups.clear();
+
+    // // The BindingDataImpl objects no longer need to call release() on the 
+    // // WGPUBindGroups themselves since the cache owns them now. 
+    // // You should modify `BindingDataImpl::release` to do nothing, 
+    // // or just use it to free the allocator memory.
     // bindingData.clear();
 }
 

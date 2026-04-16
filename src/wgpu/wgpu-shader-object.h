@@ -81,6 +81,44 @@ struct BindingDataBuilder
     );
 };
 
+struct BindGroupKey
+{
+    WGPUBindGroupLayout layout;
+    std::vector<WGPUBindGroupEntry> entries;
+    size_t hash;
+    void updateHash()
+    {
+        hash = std::hash<void*>()(layout);
+        for (const auto& entry : entries) {
+            hash_combine(hash, entry.binding);
+            hash_combine(hash, entry.buffer);
+            hash_combine(hash, entry.offset);
+            hash_combine(hash, entry.size);
+            hash_combine(hash, entry.sampler);
+            hash_combine(hash, entry.textureView);
+        }
+    }
+    bool operator==(const BindGroupKey& other) const {
+        if (layout != other.layout) return false;
+        if (entries.size() != other.entries.size()) return false;
+        
+        for (size_t i = 0; i < entries.size(); ++i) {
+            const auto& a = entries[i];
+            const auto& b = other.entries[i];
+
+            if (a.binding != b.binding ||
+                a.buffer != b.buffer ||
+                a.offset != b.offset ||
+                a.size != b.size ||
+                a.sampler != b.sampler ||
+                a.textureView != b.textureView) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
 struct BindingDataImpl : BindingData
 {
     size_t bindGroupCount;
@@ -91,8 +129,16 @@ struct BindingDataImpl : BindingData
 
 struct BindingCache
 {
-    std::unordered_set<BindingDataImpl*> bindingData;
-
+    // todo: cache invalidation
+protected:
+    struct BindGroupKeyHasher
+    {
+        std::size_t operator()(const BindGroupKey& key) const { return key.hash; }
+    };
+public:
+    std::unordered_map<BindGroupKey, WGPUBindGroup, BindGroupKeyHasher> bindGroups;
+    std::vector<BindingDataImpl*> bindingData;
+    WGPUBindGroup getOrCreateBindGroup(DeviceImpl* device, const BindGroupKey& key);
     void reset(DeviceImpl* device);
 };
 
