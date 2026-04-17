@@ -37,6 +37,11 @@ static inline Result createWGPUInstance(API& api, WGPUInstance* outInstance)
     WGPUDawnTogglesDescriptor togglesDesc = getDawnTogglesDescriptor();
     instanceDesc.nextInChain = &togglesDesc.chain;
 #endif
+    instanceDesc.requiredFeatureCount = 1;
+    const WGPUInstanceFeatureName requiredFeatures[] = {
+        WGPUInstanceFeatureName_TimedWaitAny,
+    };
+    instanceDesc.requiredFeatures = requiredFeatures;
     WGPUInstance instance = api.wgpuCreateInstance(&instanceDesc);
     if (!instance)
     {
@@ -72,7 +77,7 @@ static inline Result createWGPUAdapter(API& api, WGPUInstance instance, WGPUAdap
 
     {
         WGPURequestAdapterCallbackInfo callbackInfo = {};
-#if SLANG_WASM
+#if !SLANG_WASM
         callbackInfo.mode = WGPUCallbackMode_AllowProcessEvents;
 #else
         callbackInfo.mode = WGPUCallbackMode_WaitAnyOnly;
@@ -223,7 +228,7 @@ Result DeviceImpl::initialize(const DeviceDesc& desc)
         DeviceRequestState state;
 
         WGPURequestDeviceCallbackInfo callbackInfo = {};
-#if SLANG_WASM
+#if !SLANG_WASM
         callbackInfo.mode = WGPUCallbackMode_AllowProcessEvents;
 #else
         callbackInfo.mode = WGPUCallbackMode_WaitAnyOnly;

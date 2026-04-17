@@ -605,7 +605,7 @@ WGPUWaitStatus wait(const API& api, WGPUInstance instance, WGPUFuture future, ui
 {
     WGPUFutureWaitInfo futures[1] = {{future}};
 
-#if SLANG_WASM
+#if !SLANG_WASM
     double startMS = (timeoutNS != UINT64_MAX) ? emscripten_get_now() : 0.0;
     int spinCount = 0;
 
