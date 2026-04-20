@@ -1021,7 +1021,7 @@ Result CommandQueueImpl::submit(const SubmitDesc& desc)
         SLANG_RETURN_ON_FAIL(desc.signalFences[i]->setCurrentValue(desc.signalFenceValues[i]));
     }
 
-    waitOnHost();
+    retireCommandBuffers();
 
     return SLANG_OK;
 }
