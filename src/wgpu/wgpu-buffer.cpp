@@ -37,6 +37,22 @@ DeviceAddress BufferImpl::getDeviceAddress()
     return 0;
 }
 
+Result createFakeWriteBuffer(Device * device, const BufferDesc& desc_, WGPUBufferDescriptor& desc, const void* initData, IBuffer** outBuffer)
+{
+    desc.label = translateString(desc_.label);
+    RefPtr<BufferImpl> buffer = new BufferImpl(device, desc_);
+
+    buffer->m_fakeUploadBuffer.size = desc.size;
+    buffer->m_fakeUploadBuffer.data = (uint8_t*)malloc(desc.size);
+    if (initData)
+    {
+        memcpy(buffer->m_fakeUploadBuffer.data, initData, desc.size);
+    }
+
+    returnComPtr(outBuffer, buffer);
+    return SLANG_OK;
+}
+
 Result DeviceImpl::createBuffer(const BufferDesc& desc_, const void* initData, IBuffer** outBuffer)
 {
     BufferDesc desc = fixupBufferDesc(desc_);
@@ -51,6 +67,7 @@ Result DeviceImpl::createBuffer(const BufferDesc& desc_, const void* initData, I
     if (desc.memoryType == MemoryType::Upload)
     {
         bufferDesc.usage = WGPUBufferUsage_MapWrite | WGPUBufferUsage_CopySrc;
+        return createFakeWriteBuffer(this, desc, bufferDesc, initData, outBuffer);
     }
     else if (desc.memoryType == MemoryType::ReadBack)
     {
@@ -127,6 +144,21 @@ Result DeviceImpl::createBufferFromSharedHandle(NativeHandle handle, const Buffe
     return SLANG_E_NOT_AVAILABLE;
 }
 
+Result fakeWriteBuffer(BufferImpl* buffer, void** outData) {
+    if (buffer->m_desc.memoryType != MemoryType::Upload)
+    {
+        *outData = nullptr;
+        return SLANG_FAIL;
+    }
+    if (buffer->m_fakeUploadBuffer.data == nullptr)
+    {
+        *outData = nullptr;
+        return SLANG_FAIL;
+    }
+    *outData = buffer->m_fakeUploadBuffer.data;
+    return SLANG_OK;
+}
+
 Result DeviceImpl::mapBuffer(IBuffer* buffer, CpuAccessMode mode, void** outData)
 {
     BufferImpl* bufferImpl = checked_cast<BufferImpl*>(buffer);
@@ -139,6 +171,7 @@ Result DeviceImpl::mapBuffer(IBuffer* buffer, CpuAccessMode mode, void** outData
         break;
     case CpuAccessMode::Write:
         mapMode = WGPUMapMode_Write;
+        return fakeWriteBuffer(bufferImpl, outData);
         break;
     }
 
@@ -175,6 +208,12 @@ Result DeviceImpl::mapBuffer(IBuffer* buffer, CpuAccessMode mode, void** outData
 Result DeviceImpl::unmapBuffer(IBuffer* buffer)
 {
     BufferImpl* bufferImpl = checked_cast<BufferImpl*>(buffer);
+    if (bufferImpl->m_desc.memoryType == MemoryType::Upload)
+    {
+        // WGPUQueue queue = m_ctx.api.wgpuDeviceGetQueue(m_ctx.device);
+        // m_ctx.api.wgpuQueueWriteBuffer(queue, bufferImpl->m_buffer, 0, bufferImpl->m_fakeUploadBuffer.data, bufferImpl->m_fakeUploadBuffer.size);
+        return SLANG_OK;
+    }
     m_ctx.api.wgpuBufferUnmap(bufferImpl->m_buffer);
     return SLANG_OK;
 }

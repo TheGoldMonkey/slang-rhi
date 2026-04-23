@@ -4,6 +4,11 @@
 
 namespace rhi::wgpu {
 
+struct FakeUploadBuffer{
+    size_t size = 0;
+    uint8_t* data = nullptr;
+};
+
 class BufferImpl : public Buffer
 {
 public:
@@ -19,6 +24,7 @@ public:
 
 public:
     WGPUBuffer m_buffer = nullptr;
+    FakeUploadBuffer m_fakeUploadBuffer;
 };
 
 } // namespace rhi::wgpu

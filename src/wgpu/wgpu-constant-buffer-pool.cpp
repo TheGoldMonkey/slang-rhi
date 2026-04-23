@@ -32,17 +32,17 @@ void ConstantBufferPool::upload(Context& ctx, WGPUCommandEncoder encoder)
     {
         if (page.usedSize > 0)
         {
-            // auto queue = ctx.api.wgpuDeviceGetQueue(ctx.device);
-            // ctx.api.wgpuQueueWriteBuffer(queue, page.buffer->m_buffer, 0, page.mappedData, page.usedSize);
+            auto queue = ctx.api.wgpuDeviceGetQueue(ctx.device);
+            ctx.api.wgpuQueueWriteBuffer(queue, page.buffer->m_buffer, 0, page.stagingBuffer->m_fakeUploadBuffer.data, page.usedSize);
 
-            ctx.api.wgpuCommandEncoderCopyBufferToBuffer(
-                encoder,
-                page.stagingBuffer->m_buffer,
-                0,
-                page.buffer->m_buffer,
-                0,
-                page.usedSize
-            );
+            // ctx.api.wgpuCommandEncoderCopyBufferToBuffer(
+            //     encoder,
+            //     page.stagingBuffer->m_buffer,
+            //     0,
+            //     page.buffer->m_buffer,
+            //     0,
+            //     page.usedSize
+            // );
         }
     };
     for (const auto& page : m_pages)
