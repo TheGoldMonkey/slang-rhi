@@ -156,7 +156,7 @@ void CommandRecorder::cmdCopyBuffer(const commands::CopyBuffer& cmd)
     BufferImpl* src = checked_cast<BufferImpl*>(cmd.src);
     if (src->getDesc().memoryType == MemoryType::Upload)
     {
-        assert(src->m_fakeUploadBuffer.data + cmd.srcOffset + cmd.size <= src->m_fakeUploadBuffer.data + src->m_fakeUploadBuffer.size);
+        SLANG_RHI_ASSERT(src->m_fakeUploadBuffer.data + cmd.srcOffset + cmd.size <= src->m_fakeUploadBuffer.data + src->m_fakeUploadBuffer.size);
         m_ctx.api.wgpuQueueWriteBuffer(
             m_ctx.api.wgpuDeviceGetQueue(m_ctx.device), 
             dst->m_buffer, cmd.dstOffset, src->m_fakeUploadBuffer.data + cmd.srcOffset, cmd.size);
