@@ -52,6 +52,8 @@ inline WGPUTextureSampleType getSampleType(slang::TypeReflection* type)
     case slang::TypeReflection::ScalarType::Float32:
     case slang::TypeReflection::ScalarType::Float64:
         return WGPUTextureSampleType_Float;
+    default: // fix warning for new ptr types that were added to the enum
+        break;
     }
     return WGPUTextureSampleType_Undefined;
 }
