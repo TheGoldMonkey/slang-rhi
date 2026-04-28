@@ -1,4 +1,5 @@
 #include "wgpu-command.h"
+#include "webgpu/webgpu.h"
 #include "wgpu-device.h"
 #include "wgpu-buffer.h"
 #include "wgpu-texture.h"
@@ -9,6 +10,7 @@
 #include "../strings.h"
 
 #include "core/deferred.h"
+#include <iostream>
 
 namespace rhi::wgpu {
 
@@ -357,7 +359,36 @@ void CommandRecorder::cmdClearTextureDepthStencil(const commands::ClearTextureDe
 {
     NOT_SUPPORTED(S_CommandEncoder_clearTextureDepthStencil);
 }
+inline void sprintfcat(std::string & buffer, const char * format, ...) {
+    va_list args;
+    va_start(args, format);
 
+    // Determine the necessary buffer size
+    int needed_size = std::vsnprintf(nullptr, 0, format, args);
+    va_end(args);
+
+    if (needed_size <= 0) {
+        return; // Handle potential error
+    }
+
+    // Re-allocate memory if necessary
+    std::string temp;
+    temp.resize(needed_size);
+
+    // Write formatted data to the temporary string
+    va_start(args, format);
+    std::vsnprintf(&temp[0], needed_size + 1, format, args);
+    va_end(args);
+
+    // Append the temporary string to the buffer
+    buffer += temp;
+}
+
+template <typename T> inline auto dump_struct(const T & test) -> std::string {
+    auto buffer = std::string{};
+    __builtin_dump_struct(&test, sprintfcat, std::ref(buffer));
+    return buffer;
+}
 void CommandRecorder::cmdUploadTextureData(const commands::UploadTextureData& cmd)
 {
     auto dst = checked_cast<TextureImpl*>(cmd.dst);
@@ -366,7 +397,7 @@ void CommandRecorder::cmdUploadTextureData(const commands::UploadTextureData& cm
     SubresourceLayout* srLayout = cmd.layouts;
     Offset bufferOffset = cmd.srcOffset;
     auto buffer = checked_cast<BufferImpl*>(cmd.srcBuffer);
-
+    std::cout << "::::::::::::::::::::::::::::::" << std::endl;
     for (uint32_t layerOffset = 0; layerOffset < subresourceRange.layerCount; layerOffset++)
     {
         uint32_t layer = subresourceRange.layer + layerOffset;
@@ -395,6 +426,19 @@ void CommandRecorder::cmdUploadTextureData(const commands::UploadTextureData& cm
             copySize.width = math::calcAligned2(srLayout->size.width, srLayout->blockWidth);
             copySize.height = math::calcAligned2(srLayout->size.height, srLayout->blockHeight);
             copySize.depthOrArrayLayers = srLayout->size.depth;
+
+
+            if (buffer->getDesc().memoryType == MemoryType::Upload)
+            {
+                // std::cout << dump_struct(srcRegion.layout) << std::endl;
+                // std::cout << dump_struct(dstRegion) << std::endl;
+                // std::cout << dump_struct(*srLayout) << std::endl;
+                // std::cout << dump_struct(copySize) << std::endl;
+                // std::cout << srLayout->sizeInBytes << std::endl;
+                srcRegion.layout.offset = 0;
+                m_ctx.api.wgpuQueueWriteTexture(m_ctx.api.wgpuDeviceGetQueue(m_ctx.device), &dstRegion, buffer->m_fakeUploadBuffer.data + bufferOffset, srLayout->sizeInBytes, &srcRegion.layout, &copySize);
+                continue;
+            }
 
             m_ctx.api.wgpuCommandEncoderCopyBufferToTexture(m_commandEncoder, &srcRegion, &dstRegion, &copySize);
 
