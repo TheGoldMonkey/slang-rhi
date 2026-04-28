@@ -193,9 +193,13 @@ Result SurfaceImpl::configure(const SurfaceConfig& config)
     wgpuConfig.device = m_device->m_ctx.device;
     wgpuConfig.format = translateTextureFormat(m_config.format);
     wgpuConfig.usage = translateTextureUsage(usage);
-    // TODO: support more view formats
-    wgpuConfig.viewFormatCount = 1;
-    wgpuConfig.viewFormats = &wgpuConfig.format;
+    wgpuConfig.viewFormatCount = m_config.viewFormatCount;
+    auto viewFormats = std::vector<WGPUTextureFormat>();
+    for (size_t i = 0; i < m_config.viewFormatCount; ++i)
+    {
+        viewFormats.push_back(translateTextureFormat(m_config.viewFormats[i]));
+    }
+    wgpuConfig.viewFormats = viewFormats.data();
     wgpuConfig.alphaMode = WGPUCompositeAlphaMode_Opaque;
     wgpuConfig.width = m_config.width;
     wgpuConfig.height = m_config.height;

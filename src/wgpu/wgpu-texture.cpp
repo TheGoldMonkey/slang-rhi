@@ -3,6 +3,7 @@
 #include "wgpu-utils.h"
 
 #include "core/deferred.h"
+#include <iostream>
 
 namespace rhi::wgpu {
 
@@ -71,6 +72,13 @@ Result DeviceImpl::createTexture(const TextureDesc& desc_, const SubresourceData
     textureDesc.mipLevelCount = desc.mipCount;
     textureDesc.sampleCount = desc.sampleCount;
     textureDesc.format = translateTextureFormat(desc.format);
+    textureDesc.viewFormatCount = desc.viewFormatCount;
+    auto viewFormats = std::vector<WGPUTextureFormat>();
+    for (size_t i = 0; i < desc.viewFormatCount; ++i)
+    {
+        viewFormats.push_back(translateTextureFormat(desc.viewFormats[i]));
+    }
+    textureDesc.viewFormats = viewFormats.data();
     textureDesc.label = translateString(desc.label);
     textureDesc.usage = translateTextureUsage(desc.usage);
     if (initData)

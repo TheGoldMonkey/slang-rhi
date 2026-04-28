@@ -1016,6 +1016,11 @@ struct TextureDesc
     ResourceState defaultState = ResourceState::Undefined;
 
     const ClearValue* optimalClearValue = nullptr;
+    
+    //
+    size_t viewFormatCount = 0;
+    //
+    const Format* viewFormats;
 
     /// Default sampler to use for the texture.
     /// This specifies the sampler for combined texture/sampler descriptor handles
@@ -2746,8 +2751,10 @@ struct SurfaceConfig
     Format format = Format::Undefined;
     /// Usage of the surface. If left undefined, the supported usage is used.
     TextureUsage usage = TextureUsage::None;
-    // size_t viewFormatCount;
-    // const Format* viewFormats;
+    //
+    size_t viewFormatCount;
+    //
+    const Format* viewFormats;
     /// Width of the surface in pixels.
     uint32_t width = 0;
     /// Height of the surface in pixels.
